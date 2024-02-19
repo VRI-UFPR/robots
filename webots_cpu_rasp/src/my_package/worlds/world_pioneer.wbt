@@ -5,6 +5,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/SandyGround.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/microsoft/protos/Kinect.proto"
 
 WorldInfo {
   info [
@@ -16,8 +17,8 @@ WorldInfo {
   lineScale 0.5
 }
 Viewpoint {
-  orientation 0.034299206569189215 0.9907436435431156 -0.13134152887657385 0.5153638011847193
-  position -2.210690006147178 0.3900006995580523 1.7412253542118372
+  orientation 0.09524406967786737 0.8273956466349727 -0.5534844271708944 0.41008168731741274
+  position -9.174807002669635 1.6035475689200342 3.6997848456871414
   followSmoothness 0
 }
 TexturedBackground {
@@ -385,4 +386,9 @@ DEF OBSTACLE_40 Solid {
 Pioneer3dx {
   name "pioneer"
   controller "<extern>"
+  extensionSlot [
+    Kinect {
+      translation 0 0 0.5
+    }
+  ]
 }

@@ -6,6 +6,7 @@
 
 import rclpy
 from geometry_msgs.msg import Twist
+from sensor_msgs.msg import Image
 
 HALF_DISTANCE_BETWEEN_WHEELS = 0.045
 WHEEL_RADIUS = 0.025
@@ -20,6 +21,8 @@ class MyRobotDriver:
 
         self.__left_motor = self.__robot.getDevice('left wheel')
         self.__right_motor = self.__robot.getDevice('right wheel')
+        self.__camera = self.__robot.getDevice('kinect color')
+        self.__camera.enable(100)
 
         self.__left_motor.setPosition(float('inf'))
         self.__left_motor.setVelocity(0)
@@ -32,6 +35,9 @@ class MyRobotDriver:
         rclpy.init(args=None)
         self.__node = rclpy.create_node('my_robot_driver')
         self.__node.create_subscription(Twist, 'cmd_vel', self.__cmd_vel_callback, 1)
+        
+        self.__webcam_pub = self.__node.create_publisher(Image, 'webcam_image', 10)
+
 
     def __cmd_vel_callback(self, twist):
         self.__target_twist = twist
@@ -47,3 +53,5 @@ class MyRobotDriver:
 
         self.__left_motor.setVelocity(command_motor_left)
         self.__right_motor.setVelocity(command_motor_right)
+
+        image = self.__camera.getImage()
