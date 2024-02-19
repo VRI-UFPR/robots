@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# =============================================================================
+#  Header
+# =============================================================================
+
 import cv2
 import threading
 import rclpy
@@ -10,6 +14,10 @@ from cv_bridge import CvBridge
 from yolo_msgs.msg import ModelResults
 
 bridge = CvBridge()
+
+# =============================================================================
+#  Yolo Subscriber
+# =============================================================================
 
 class yolo_subscriber(Node):
 
@@ -43,6 +51,9 @@ class yolo_subscriber(Node):
 	# save image for testing purposes
         cv2.imwrite('inference_result.jpg', img)
 
+# =============================================================================
+#  Main
+# =============================================================================
 
 if __name__ == '__main__':
     rclpy.init(args=None)

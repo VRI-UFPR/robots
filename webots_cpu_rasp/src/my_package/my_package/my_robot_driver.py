@@ -1,8 +1,18 @@
+#!/usr/bin/env python3
+
+# =============================================================================
+#  Header
+# =============================================================================
+
 import rclpy
 from geometry_msgs.msg import Twist
 
 HALF_DISTANCE_BETWEEN_WHEELS = 0.045
 WHEEL_RADIUS = 0.025
+
+# =============================================================================
+#  MyRobotDriver
+# =============================================================================
 
 class MyRobotDriver:
     def init(self, webots_node, properties):

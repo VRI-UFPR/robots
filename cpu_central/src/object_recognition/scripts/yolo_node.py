@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# =============================================================================
+#  Header
+# =============================================================================
+
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
@@ -10,6 +14,10 @@ from yolo_msgs.msg import ObjectData
 from yolo_msgs.msg import ModelResults
 
 bridge = CvBridge()
+
+# =============================================================================
+#  Yolo
+# =============================================================================
 
 class yolo(Node):
     def __init__(self):
@@ -42,6 +50,10 @@ class yolo(Node):
 
         self.model_pub.publish(self.model_results)
         self.model_results.model_results.clear()
+
+# =============================================================================
+#  Main
+# =============================================================================
 
 if __name__ == '__main__':
     rclpy.init(args=None)

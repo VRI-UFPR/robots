@@ -40,6 +40,13 @@ install(
 )
 
 install(
+  FILES
+    launch/all.py
+  DESTINATION
+    share/${PROJECT_NAME}/
+)
+
+install(
   PROGRAMS
   scripts/yolo_node.py
   scripts/yolo_subscriber.py
