@@ -27,6 +27,9 @@ def generate_launch_description():
         robot_name='pioneer',
         parameters=[
             {'robot_description': robot_description_path},
+        ],
+        remappings=[
+            ('/pioneer/kinect_color/image_color', '/webcam_image')
         ]
     )
 

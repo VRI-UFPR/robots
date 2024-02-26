@@ -6,6 +6,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/SandyGround.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/microsoft/protos/Kinect.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/slamtec/protos/RpLidarA2.proto"
 
 WorldInfo {
   info [
@@ -17,8 +18,8 @@ WorldInfo {
   lineScale 0.5
 }
 Viewpoint {
-  orientation 0.09524406967786737 0.8273956466349727 -0.5534844271708944 0.41008168731741274
-  position -9.174807002669635 1.6035475689200342 3.6997848456871414
+  orientation 0.13020807252308808 0.612071015560373 -0.7800095703007214 0.5324912599262531
+  position -10.777463796532212 4.268917435011501 4.344502427056569
   followSmoothness 0
 }
 TexturedBackground {
@@ -387,6 +388,9 @@ Pioneer3dx {
   name "pioneer"
   controller "<extern>"
   extensionSlot [
+    RpLidarA2 {
+      translation 0 0 0.18
+    }
     Kinect {
       translation 0 0 0.5
     }
