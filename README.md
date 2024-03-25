@@ -65,7 +65,7 @@ Configure as variaveis de ambiente do ROS Humble
 
 # Gerenciamento do Projeto
 
-[Gerenciamento](./0-gerenciamento/readme.md)
+Documentação sobre o andamento do projeto [aqui](./0-gerenciamento/readme.md)
 
 
 

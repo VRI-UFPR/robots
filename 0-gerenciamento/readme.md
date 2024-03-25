@@ -11,10 +11,10 @@
 
 ## Visão Computacional
 
-- Fazer um modulo usando a YOLO para detecção de Objetos (OK - Luize);
-- Fazer um modulo usando a YOLO para reconhecimento de Objetos;
-- Fazer um modulo usando a YOLO para detecção de Faces;
-- Fazer um modulo usando a YOLO para reconhecimento de Faces;
+- Fazer um modulo usando a YOLO para detecção de Objetos (OK - Luize)
+- Fazer um modulo usando a YOLO para reconhecimento de Objetos
+- Fazer um modulo usando a YOLO para detecção de Faces
+- Fazer um modulo usando a YOLO para reconhecimento de Faces
 
 ## Audição Computacional
 
@@ -28,7 +28,12 @@
 - Configurar o stack de Navegação do ROS 2 para o projeto
 
 ## Estrutura do Robô
-- Fazer o modelo 3D do robô (30% concluido)
+- Fazer o modelo 3D do robô
+- Adicionar ao modelo uma estrutura para o raspberry e o lidar
+- Adicionar ao modelo uma estrutura para a jetson
+- Adicionar ao modelo uma estrutura para a camera intel D435i
+- Adicionar ao modelo uma estrutura para o braço robótico
+
 
 ## Melhorias para o desenvolvimento
 - Fazer funcionar um simulador para poder testar localmente sem o pioneer
