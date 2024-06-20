@@ -46,7 +46,7 @@ int tty_init(tty_t* tty, int baud) {
 
     if (tcgetattr(tty_fd, &tio) < 0) {
         printf("Error from tcgetattr: %s\n", strerror(errno));
-        return -1;
+        exit(1);
     }
 
     /* turn off echo, canonical mode, extended processing, signals */

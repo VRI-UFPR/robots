@@ -62,14 +62,22 @@ int pioneer_read(pioneer_t* pioneer) {
     // read data from serial port
     int pack_size = 0;
     uint8_t buffer[PACK_MAX_SIZE];
+    int tried = 0;
 
     int state = 0;
     for(int i=0; i<3;) {
         uint8_t c = 0;
         const int size = read(pioneer->tty.fd, &c, 1);
         if ( size == 0 ) {
-            tty_select(&pioneer->tty, 10);
+            tty_select(&pioneer->tty, 25);
+            tried += 1;
+            if ( tried > 20 ) {
+                printf("Nenhum dado recebido");
+                exit(1);
+            }
             continue;
+        } else {
+            tried = 0;
         }
 
         // waiting for 0xFA
@@ -173,6 +181,11 @@ int pioneer_exec_va(pioneer_t* pioneer, uint8_t command, char* format, ...) {
 //  Pioneer Commands
 // ============================================================================
 
+/**
+ * Inicializa o objeto da classe pioneer. Apenas zera as variaveis e abre a
+ * conexao com o dispositivo serial /dev/ttyUSB0 com a velocidade 9600
+ */
+
 int pioneer_init(pioneer_t* pioneer) {
     pioneer->buf_recv_wrte0 = 0;
     pioneer->buf_recv_wrte1 = 0;
@@ -183,6 +196,28 @@ int pioneer_init(pioneer_t* pioneer) {
     tty_init(&pioneer->tty, B9600);
     return OK;
 }
+
+
+/**
+ * Envia comandos para se conectar com o robo
+ * 
+ * @brief
+ *          Ass     | Count | Command | Checksum
+ * -----------------------------------------------
+ * sent1: 0xFA 0xFB | 0x03  | 0x00    | 0x00 0x00
+ * recv1: 0xFA 0xFB | 0x03  | 0x00    | 0x00 0x00
+ * 
+ * sent2: 0xFA 0xFB | 0x03  | 0x01    | 0x00 0x01
+ * recv2: 0xFA 0xFB | 0x03  | 0x01    | 0x00 0x01
+ * 
+ * sent3: 0xFA 0xFB | 0x03  | 0x02    | 0x00 0x02
+ * recv3: 0xFA 0xFB | 0x03  | 0x02    | 0x00 0x02
+ * 
+ * sent4: 0xFA 0xFB | 0x03  | 0x01    | 0x00 0x01
+ * recv4:
+ *
+ * @return error code
+ */
 
 int pioneer_connect(pioneer_t* pioneer) {
     // Sync0,1,2
@@ -197,34 +232,123 @@ int pioneer_connect(pioneer_t* pioneer) {
     return OK;
 }
 
+/**
+ * Fecha conexao com o robo
+ * 
+ * @brief
+ *          Ass    | Count | Command | Checksum
+ * -----------------------------------------------
+ * sent: 0xFA 0xFB | 0x03  | 0x02    | 0x00 0x02
+ *
+ * @return error code
+ */
 int pioneer_close(pioneer_t* pioneer) {
     return pioneer_exec(pioneer, 0x02);
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | Checksum
+ * -----------------------------------------------
+ * sent: 0xFA 0xFB | 0x03  | 0x00    | 0x00 0x00
+ *
+ * @return error code
+ */
 int pioneer_pulse(pioneer_t* pioneer) {
-    return pioneer_exec(pioneer, 0x00);
+    pioneer_exec(pioneer, 0x00);
+    // pioneer_read(&pioneer);
+    return 0;
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | ArgType1      | ArgValue1 | Checksum
+ * -------------------------------------------------------------------------
+ * sent: 0xFA 0xFB | 0x06  | 28      | 0x1B (uint16) | 0x01 0x00 | 0x00 0x00
+ *
+ * @return error code
+ */
 int pioneer_enable_sonars(pioneer_t* pioneer) {
     return pioneer_exec_va(pioneer, 28, "u", 1);
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | ArgType1      | ArgValue1 | Checksum
+ * -------------------------------------------------------------------------
+ * sent: 0xFA 0xFB | 0x06  | 28      | 0x1B (uint16) | 0x00 0x00 | 0x00 0x00
+ *
+ * @return error code
+ */
 int pioneer_disable_sonars(pioneer_t* pioneer) {
     return pioneer_exec_va(pioneer, 28, "u", 0);
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | ArgType1      | ArgValue1 | Checksum
+ * -------------------------------------------------------------------------
+ * sent: 0xFA 0xFB | 0x06  | 4       | 0x1B (uint16) | 0x01 0x00 | 0x00 0x00
+ *
+ * @return error code
+ */
 int pioneer_enable_motors(pioneer_t* pioneer) {
     return pioneer_exec_va(pioneer, 4, "u", 1);
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | ArgType1      | ArgValue1 | Checksum
+ * -------------------------------------------------------------------------
+ * sent: 0xFA 0xFB | 0x06  | 4       | 0x1B (uint16) | 0x00 0x00 | 0x00 0x00
+ *
+ * @return error code
+ */
 int pioneer_disable_motors(pioneer_t* pioneer) {
     return pioneer_exec_va(pioneer, 4, "u", 0);
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | ArgType1     | ArgValue1     | Checksum
+ * -------------------------------------------------------------------------
+ * sent: 0xFA 0xFB | 0x06  | 11      | 0x3B (int16) | vel[0] vel[1] | 0x?? 0x??
+ *
+ * @return error code
+ */
 int pioneer_vel(pioneer_t* pioneer, int16_t vel) {
     return pioneer_exec_va(pioneer, 11, "i", vel);
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | ArgType1     | ArgValue1     | Checksum
+ * -------------------------------------------------------------------------
+ * sent: 0xFA 0xFB | 0x06  | 32      | 0x3B (int16) | vel1 vel2     | 0x?? 0x??
+ *
+ * @return error code
+ */
 int pioneer_vel2(pioneer_t* pioneer, int8_t vel1, int8_t vel2) {
     uint16_t vel;
     vel = vel1;
@@ -232,6 +356,17 @@ int pioneer_vel2(pioneer_t* pioneer, int8_t vel1, int8_t vel2) {
     return pioneer_exec_va(pioneer, 32, "i", vel);
 }
 
+/**
+ * Envia um pulse para robo para dizer que o algoritmo 
+ * esta vivo
+ * 
+ * @brief
+ *          Ass    | Count | Command | ArgType1     | ArgValue1               | Checksum
+ * ---------------------------------------------------------------------------------------
+ * sent: 0xFA 0xFB | 0x06  | 21      | 0x3B (int16) | rotvel[0] rotval[1]     | 0x?? 0x??
+ *
+ * @return error code
+ */
 int pioneer_rotvel(pioneer_t* pioneer, int16_t rotvel) {
     return pioneer_exec_va(pioneer, 21, "i", rotvel);
 }
