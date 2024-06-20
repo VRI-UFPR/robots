@@ -34,16 +34,20 @@ int main () {
     pioneer_t pioneer;
     pioneer_init(&pioneer);
     pioneer_connect(&pioneer);
-    
-    // Esperando
-    printf("esperando\n");
     // pioneer_disable_sonars(&pioneer);
     // pioneer_enable_sonars(&pioneer);
     pioneer_enable_motors(&pioneer);
 
-    sleep(2);
-    pioneer_vel(&pioneer, 5);
-    sleep(1);
+    // Movimentando para frente
+    printf("# Movimentando para frente\n");
+    for (int i=0; i<10; i++) {
+        pioneer_vel2(&pioneer, 5, 5);
+        usleep(500000); // 500ms
+    }
+
+    // Girando para os lados
+    printf("# Girando para os lados\n");
+    pioneer_vel(&pioneer, 0);
     pioneer_rotvel(&pioneer, 15);
     sleep(2);
     pioneer_rotvel(&pioneer, -15);
