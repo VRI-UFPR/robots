@@ -32,7 +32,11 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "pioneer_p3dx.h"
 #include "pioneer_p3dx_pvt.h"
+
+pioneer_t g_pioneer;
+int g_debug_level = 0;
 
 // ============================================================================
 //  Pioneer Basic
@@ -58,7 +62,7 @@ int pioneer_read_block(pioneer_t* pioneer, const uint8_t count, uint8_t* buffer)
     return wrte;
 }
 
-int pioneer_read(pioneer_t* pioneer) {
+int pioneer_read_package(pioneer_t* pioneer) {
     // read data from serial port
     int pack_size = 0;
     uint8_t buffer[PACK_MAX_SIZE];
@@ -117,16 +121,20 @@ int pioneer_read(pioneer_t* pioneer) {
         if ( cmd == 0x32 || cmd == 0x33 ) {
             pioneer->pos_x = *( (int16_t*) &buffer[4] );
             pioneer->pos_y = *( (int16_t*) &buffer[6] );
+            uint16_t u16_pos_th = *( (int16_t*) &buffer[8] );
+            pioneer->pos_th = (((float) u16_pos_th) * 360.0 ) / 4096.0;
         }
     }
 
-    printf("recv: ");
-    for (int i=0; i<pack_size; i++) {
-        printf("%02X ", buffer[i]);
+    if ( g_debug_level >= 2 ) {
+        fprintf(stderr, "recv: ");
+        for (int i=0; i<pack_size; i++) {
+            fprintf(stderr, "%02X ", buffer[i]);
+        }
+        fprintf(stderr, "\r\n");
+        fprintf(stderr, "- x: %d, y: %d \r\n", pioneer->pos_x, pioneer->pos_y);
     }
-    printf("\r\n");
 
-    printf("- x: %d, y: %d \r\n", pioneer->pos_x, pioneer->pos_y);
     return pack_size;
 }
 
@@ -142,7 +150,7 @@ int pioneer_exec_with_answer(pioneer_t* pioneer, uint8_t command) {
     pack_init(pioneer->pack_send, command);
     pack_finish(pioneer->pack_send);
     tty_send_pack(&pioneer->tty, pioneer->pack_send);
-    pioneer_read(pioneer);
+    pioneer_read_package(pioneer);
     return OK;
 }
 
@@ -178,7 +186,7 @@ int pioneer_exec_va(pioneer_t* pioneer, uint8_t command, char* format, ...) {
 }
 
 // ============================================================================
-//  Pioneer Commands
+//  Pioneer Constructor
 // ============================================================================
 
 /**
@@ -186,17 +194,18 @@ int pioneer_exec_va(pioneer_t* pioneer, uint8_t command, char* format, ...) {
  * conexao com o dispositivo serial /dev/ttyUSB0 com a velocidade 9600
  */
 
-int pioneer_init(pioneer_t* pioneer) {
-    pioneer->buf_recv_wrte0 = 0;
-    pioneer->buf_recv_wrte1 = 0;
-    pioneer->pack_recv = (pack_t*) &pioneer->buf_recv[0];
-    pioneer->pack_send = (pack_t*) &pioneer->buf_send[0];
-    pioneer->pos_x = 0;
-    pioneer->pos_y = 0; 
-    tty_init(&pioneer->tty, B9600);
+__attribute__((constructor))
+int pioneer_init() {
+    g_pioneer.pack_send = (pack_t*) &g_pioneer.buf_send[0];
+    g_pioneer.pos_x = 0;
+    g_pioneer.pos_y = 0; 
+    g_pioneer.pos_th = 0;
     return OK;
 }
 
+// ============================================================================
+//  Pioneer Commands
+// ============================================================================
 
 /**
  * Envia comandos para se conectar com o robo
@@ -219,14 +228,19 @@ int pioneer_init(pioneer_t* pioneer) {
  * @return error code
  */
 
-int pioneer_connect(pioneer_t* pioneer) {
+int pioneer_connect(int debug_level) {
+    g_debug_level = debug_level;
+
+    assert( tty_init(&g_pioneer.tty, B9600) == OK );
+
     // Sync0,1,2
-    assert( pioneer_exec_with_answer(pioneer, 0x00) == OK );
-    assert( pioneer_exec_with_answer(pioneer, 0x01) == OK );
-    assert( pioneer_exec_with_answer(pioneer, 0x02) == OK );
+    assert( pioneer_exec_with_answer(&g_pioneer, 0x00) == OK );
+    assert( pioneer_exec_with_answer(&g_pioneer, 0x01) == OK );
+    assert( pioneer_exec_with_answer(&g_pioneer, 0x02) == OK );
 
     // Open server
-    assert(pioneer_exec_with_answer(pioneer, 0x01) == OK );
+    assert( pioneer_exec_with_answer(&g_pioneer, 0x01) == OK );
+    assert( pioneer_enable_motors() == OK );
 
     // Success
     return OK;
@@ -242,8 +256,8 @@ int pioneer_connect(pioneer_t* pioneer) {
  *
  * @return error code
  */
-int pioneer_close(pioneer_t* pioneer) {
-    return pioneer_exec(pioneer, 0x02);
+int pioneer_close() {
+    return pioneer_exec(&g_pioneer, 0x02);
 }
 
 /**
@@ -257,10 +271,8 @@ int pioneer_close(pioneer_t* pioneer) {
  *
  * @return error code
  */
-int pioneer_pulse(pioneer_t* pioneer) {
-    pioneer_exec(pioneer, 0x00);
-    // pioneer_read(&pioneer);
-    return 0;
+int pioneer_pulse() {
+    return pioneer_exec(&g_pioneer, 0x00);
 }
 
 /**
@@ -274,8 +286,8 @@ int pioneer_pulse(pioneer_t* pioneer) {
  *
  * @return error code
  */
-int pioneer_enable_sonars(pioneer_t* pioneer) {
-    return pioneer_exec_va(pioneer, 28, "u", 1);
+int pioneer_enable_sonars() {
+    return pioneer_exec_va(&g_pioneer, 28, "u", 1);
 }
 
 /**
@@ -289,8 +301,8 @@ int pioneer_enable_sonars(pioneer_t* pioneer) {
  *
  * @return error code
  */
-int pioneer_disable_sonars(pioneer_t* pioneer) {
-    return pioneer_exec_va(pioneer, 28, "u", 0);
+int pioneer_disable_sonars() {
+    return pioneer_exec_va(&g_pioneer, 28, "u", 0);
 }
 
 /**
@@ -304,8 +316,8 @@ int pioneer_disable_sonars(pioneer_t* pioneer) {
  *
  * @return error code
  */
-int pioneer_enable_motors(pioneer_t* pioneer) {
-    return pioneer_exec_va(pioneer, 4, "u", 1);
+int pioneer_enable_motors() {
+    return pioneer_exec_va(&g_pioneer, 4, "u", 1);
 }
 
 /**
@@ -319,8 +331,8 @@ int pioneer_enable_motors(pioneer_t* pioneer) {
  *
  * @return error code
  */
-int pioneer_disable_motors(pioneer_t* pioneer) {
-    return pioneer_exec_va(pioneer, 4, "u", 0);
+int pioneer_disable_motors() {
+    return pioneer_exec_va(&g_pioneer, 4, "u", 0);
 }
 
 /**
@@ -334,8 +346,8 @@ int pioneer_disable_motors(pioneer_t* pioneer) {
  *
  * @return error code
  */
-int pioneer_vel(pioneer_t* pioneer, int16_t vel) {
-    return pioneer_exec_va(pioneer, 11, "i", vel);
+int pioneer_vel(int16_t vel) {
+    return pioneer_exec_va(&g_pioneer, 11, "i", vel);
 }
 
 /**
@@ -349,11 +361,11 @@ int pioneer_vel(pioneer_t* pioneer, int16_t vel) {
  *
  * @return error code
  */
-int pioneer_vel2(pioneer_t* pioneer, int8_t vel1, int8_t vel2) {
+int pioneer_vel2(int8_t vel1, int8_t vel2) {
     uint16_t vel;
     vel = vel1;
     vel += ((uint16_t) vel2) << 8;
-    return pioneer_exec_va(pioneer, 32, "i", vel);
+    return pioneer_exec_va(&g_pioneer, 32, "i", vel);
 }
 
 /**
@@ -367,6 +379,14 @@ int pioneer_vel2(pioneer_t* pioneer, int8_t vel1, int8_t vel2) {
  *
  * @return error code
  */
-int pioneer_rotvel(pioneer_t* pioneer, int16_t rotvel) {
-    return pioneer_exec_va(pioneer, 21, "i", rotvel);
+int pioneer_rotvel(int16_t rotvel) {
+    return pioneer_exec_va(&g_pioneer, 21, "i", rotvel);
+}
+
+int pioneer_read(int* pos_x, int* pos_y, float* pos_th) {
+    if ( pioneer_read_package(&g_pioneer) > 0 ) {
+        *pos_x = g_pioneer.pos_x;
+        *pos_y = g_pioneer.pos_y;
+        *pos_th = g_pioneer.pos_th;
+    }
 }

@@ -105,11 +105,13 @@ void tty_send_pack(tty_t* tty, pack_t* pack) {
     }
 
     // Debug
-    fprintf(stderr, "sent: ");
-    for ( int i=0; i<pack_size; i++) {
-        fprintf(stderr, "%02x ", pack_ptr[i]);
+    if ( g_debug_level >= 2 ) {
+        fprintf(stderr, "sent: ");
+        for ( int i=0; i<pack_size; i++) {
+            fprintf(stderr, "%02x ", pack_ptr[i]);
+        }
+        fprintf(stderr, "\r\n");
     }
-    fprintf(stderr, "\r\n");
 }
 
 int tty_select(tty_t* tty, int timeout_ms) {
@@ -129,7 +131,7 @@ int tty_read(tty_t* tty, int timeout_ms, uint8_t* buffer, int maxsize) {
     // -1: error, 0: timeout: out
     const int error = tty_select(tty, timeout_ms);
     if (error < 0) {
-        printf("opa %d\n", error);
+        printf("timeout %d\n", error);
         return 0;
     }
 

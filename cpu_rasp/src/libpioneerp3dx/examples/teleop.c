@@ -83,11 +83,10 @@ int getch()
 int main(int argc, char *argv[]) {
     // Begin
     set_conio_terminal_mode();
-    pioneer_t pioneer;
-    pioneer_init(&pioneer);
-    pioneer_connect(&pioneer);
-    pioneer_disable_sonars(&pioneer);
-    pioneer_enable_motors(&pioneer);
+
+    pioneer_connect(0);
+    // pioneer_disable_sonars();
+    // pioneer_enable_motors();
 
     // Main loop
     printf("Main loop\r\n");
@@ -97,25 +96,32 @@ int main(int argc, char *argv[]) {
             if ( c == 'q' ) {
                 break;
             } else if ( c == 'a' ) {
-                pioneer_rotvel(&pioneer, 15);
+                pioneer_rotvel(15);
             } else if ( c == 'd' ) {
-                pioneer_rotvel(&pioneer, -15);
+                pioneer_rotvel(-15);
             } else if ( c == 'w' ) {
                 // pioneer_vel(&pioneer, 50);
-                pioneer_vel2(&pioneer, 5, 5);
+                pioneer_vel2(5, 5);
             } else if ( c == 's' ) {
-                pioneer_vel(&pioneer, -50);
+                pioneer_vel(-50);
+            } else if ( c == ' ' ) {
+                pioneer_vel2(0, 0);
             } else {
                 // printf("%c\n", c);
             }
         }
 
-        pioneer_pulse(&pioneer);
-        pioneer_read(&pioneer);
-        // usleep(10000);
+        pioneer_pulse();
+
+        int pos_x, pos_y;
+        float pos_th;
+        pioneer_read(&pos_x, &pos_y, &pos_th);
+        printf("%d %d %f\r\n", pos_x, pos_y, pos_th);
+        
+        usleep(20000);
     }
 
     // End
-    pioneer_close(&pioneer);
+    pioneer_close();
     return 0;
 }

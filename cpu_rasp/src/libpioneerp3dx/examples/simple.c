@@ -31,30 +31,28 @@
 
 int main () {
     // Start
-    pioneer_t pioneer;
-    pioneer_init(&pioneer);
-    pioneer_connect(&pioneer);
-    // pioneer_disable_sonars(&pioneer);
-    // pioneer_enable_sonars(&pioneer);
-    pioneer_enable_motors(&pioneer);
+    pioneer_connect(0);
+    // pioneer_disable_sonars();
+    // pioneer_enable_sonars();
+    // pioneer_enable_motors();
 
     // Movimentando para frente
     printf("# Movimentando para frente\n");
     for (int i=0; i<10; i++) {
-        pioneer_vel2(&pioneer, 5, 5);
+        pioneer_vel2(5, 5);
         usleep(500000); // 500ms
     }
 
     // Girando para os lados
     printf("# Girando para os lados\n");
-    pioneer_vel(&pioneer, 0);
-    pioneer_rotvel(&pioneer, 15);
+    pioneer_vel(0);
+    pioneer_rotvel(15);
     sleep(2);
-    pioneer_rotvel(&pioneer, -15);
+    pioneer_rotvel(-15);
     sleep(2);
     
     // Fim
     printf("fim\n");
-    pioneer_close(&pioneer);
+    pioneer_close();
     return 0;
 }

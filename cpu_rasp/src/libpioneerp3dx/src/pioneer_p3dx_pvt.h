@@ -27,6 +27,36 @@
 #define TYPE_I16  0x3b
 #define TYPE_STR  0x2b
 
+#define PACK_MAX_SIZE 256
+
+extern int g_debug_level;
+
+// ============================================================================
+//  Strutures
+// ============================================================================
+
+typedef struct {
+    uint8_t header[2];
+    uint8_t count;
+    uint8_t command;
+    uint8_t argdata[];
+} pack_t;
+
+typedef struct {
+    int state;
+    int fd;
+} tty_t;
+
+typedef struct {
+    uint8_t buf_send[PACK_MAX_SIZE];
+    pack_t* pack_send;
+    
+    tty_t tty;
+    int16_t pos_x;
+    int16_t pos_y;
+    float pos_th;
+} pioneer_t;
+
 // ============================================================================
 //  Package Functions
 // ============================================================================
