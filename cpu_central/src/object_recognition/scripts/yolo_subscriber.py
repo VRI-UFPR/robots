@@ -1,38 +1,32 @@
 #!/usr/bin/env python3
 
-# =============================================================================
-#  Header
-# =============================================================================
-
 import cv2
 import threading
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-
 from yolo_msgs.msg import ModelResults
-
-bridge = CvBridge()
-
-# =============================================================================
-#  Yolo Subscriber
-# =============================================================================
 
 class yolo_subscriber(Node):
 
     def __init__(self):
         super().__init__('yolo_subscriber')
 
+	# create subscription to webcam image and model results
         self.subscription = self.create_subscription(Image, '/webcam_image', self.camera_callback, 10)
         self.subscription = self.create_subscription(ModelResults, '/model_results', self.yolo_callback, 10)
-        self.subscription 
-
         self.cnt = 0
+
+
+        self.bridge = CvBridge()
+
 
     def camera_callback(self, data):
         global img
-        img = bridge.imgmsg_to_cv2(data, "bgr8")
+        img = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        
+
 
     def yolo_callback(self, data):
         global img	
@@ -51,9 +45,6 @@ class yolo_subscriber(Node):
 	# save image for testing purposes
         cv2.imwrite('inference_result.jpg', img)
 
-# =============================================================================
-#  Main
-# =============================================================================
 
 if __name__ == '__main__':
     rclpy.init(args=None)

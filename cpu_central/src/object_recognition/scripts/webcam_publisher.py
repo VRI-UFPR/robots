@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
 
-# =============================================================================
-#  Header
-# =============================================================================
-
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
-
-# =============================================================================
-#  Webcam Publisher
-# =============================================================================
 
 class webcam_publisher(Node):
     def __init__(self):
@@ -34,10 +26,6 @@ class webcam_publisher(Node):
             img_msg = self.cv_bridge.cv2_to_imgmsg(frame_rgb, encoding="rgb8")
 
             self.publisher.publish(img_msg)
-
-# =============================================================================
-#  Main
-# =============================================================================
 
 def main(args=None):
     rclpy.init(args=args)

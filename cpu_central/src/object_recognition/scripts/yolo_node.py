@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# =============================================================================
-#  Header
-# =============================================================================
-
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
@@ -13,11 +9,6 @@ from cv_bridge import CvBridge
 from yolo_msgs.msg import ObjectData
 from yolo_msgs.msg import ModelResults
 
-bridge = CvBridge()
-
-# =============================================================================
-#  Yolo
-# =============================================================================
 
 class yolo(Node):
     def __init__(self):
@@ -30,10 +21,13 @@ class yolo(Node):
         self.subscription
 
         self.model_pub = self.create_publisher(ModelResults, '/model_results', 1)
+        
+        self.bridge = CvBridge()
+
 
     def camera_callback(self, data):
-        img = bridge.imgmsg_to_cv2(data, "bgr8")
-        results = self.model(img)
+        img = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        results = self.model.track(img, persist=True)
 
         for r in results:
             boxes = r.boxes
@@ -48,12 +42,10 @@ class yolo(Node):
                 self.object_data.right = int(b[3])
                 self.model_results.model_results.append(self.object_data)
 
+
         self.model_pub.publish(self.model_results)
         self.model_results.model_results.clear()
 
-# =============================================================================
-#  Main
-# =============================================================================
 
 if __name__ == '__main__':
     rclpy.init(args=None)
