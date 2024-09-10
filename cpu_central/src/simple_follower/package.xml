@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>simple_follower</name>
+  <version>0.0.1</version>
+  <description>Package for following a person using object recognition results.</description>
+  <maintainer email="luize.duarte@ufpr.br">Luize</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>object_recognition</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

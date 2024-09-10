@@ -6,8 +6,8 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
-from yolo_msgs.msg import ObjectData
-from yolo_msgs.msg import ModelResults
+from object_recognition.msg import ObjectData
+from object_recognition.msg import ModelResults
 
 
 class yolo(Node):
