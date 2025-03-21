@@ -84,13 +84,68 @@ int main() {
 
     // Links
     // link_t timer = ufr_subscriber("@new posix:timer @time 1s");
-    link_t server = ufr_server_st("@new zmq:socket @coder msgpack @debug 0");
+    link_t server = ufr_server_st("@new zmq:socket @coder msgpack @debug 0 @host 10.0.0.2");
 
-    link_t motors = ufr_publisher("@new ros_humble:topic @msg twist @topic /cmd_vel @debug 0");
-    link_t scan = ufr_subscriber("@new ros_humble:topic @msg laserscan @topic /scan @debug 4");
-    link_t odom = ufr_subscriber("@new ros_humble:topic @msg pose @topic /odom @debug 0");
-    link_t cam1 = ufr_subscriber("@new ros_humble:topic @msg image @topic /camera1");
-    link_t cam2 = ufr_subscriber("@new ros_humble:topic @msg image @topic /camera2");
+    link_t cam1 = ufr_subscriber("@new mqtt @coder msgpack @topic /camera @host 10.0.0.4");
+    link_t odom = ufr_subscriber("@new ros_humble @coder ros_humble:pose @topic /odom @debug 0");
+    
+
+    // Robot Variables
+    float pos_x=0, pos_y=0, pos_th=0;
+    Mat map(320, 320, CV_8UC1);
+
+    // Buffers
+    std::vector<uchar> buf;
+
+    while ( ufr_loop_ok() ) {
+        if ( ufr_recv_async(&odom) == UFR_OK ) {
+            ufr_get(&odom, "fffff", 
+                &g_base.pos_x, &g_base.pos_y, &g_base.pos_th, 
+                &g_base.vel, &g_base.rotvel);
+            g_base.last = time(0);
+            // printf("odom\n");
+        }
+
+        if ( ufr_recv_async(&cam1) == UFR_OK ) {
+            g_cam1_size = ufr_get_nbytes(&cam1);
+            ufr_get_raw(&cam1, g_cam1_data, g_cam1_size);
+            
+
+            //const uint8_t* ros_image = ufr_get_rawptr(&cam1);
+            // memcpy(g_cam1_data, ros_image, g_cam1_size);
+            printf("opa1 %d %p\n", g_cam1_size, g_cam1_data);
+        }
+
+
+        if ( ufr_recv_async(&server) == UFR_OK ) {
+            char command[1024];
+            ufr_get(&server, "s", command);
+            printf("[INFO:Server]: %s ", command);
+
+            if ( strcmp(command, "odom") == 0 ) {
+                ufr_get_eof(&server);
+                ufr_put(&server, "fffff\n\n", g_base.pos_x, g_base.pos_y, g_base.pos_th, g_base.vel, g_base.rotvel);
+                printf("- OK\n");
+            } else if ( strcmp(command, "camera1.jpg") == 0 ) {
+                ufr_get_eof(&server);
+                ufr_put_raw(&server, g_cam1_data, g_cam1_size);
+                ufr_put(&server, "\n");
+                ufr_put_eof(&server);
+                printf(" - OK\n");
+            }
+        }
+    }
+}
+
+
+
+int aaa() {
+    link_t server = ufr_server_st("@new zmq:socket @coder msgpack @debug 0 @host 10.0.0.2");
+    link_t motors = ufr_publisher("@new ros_humble:topic @coder ros_humble:twist @topic /cmd_vel @debug 0");
+    link_t scan = ufr_subscriber("@new ros_humble:topic @coder ros_humble:laserscan @topic /scan @debug 4");
+    link_t odom = ufr_subscriber("@new ros_humble:topic @coder ros_humble:pose @topic /odom @debug 0");
+    link_t cam1 = ufr_subscriber("@new ros_humble:topic @coder ros_humble:image @topic /camera1");
+    link_t cam2 = ufr_subscriber("@new ros_humble:topic @coder ros_humble:image @topic /camera2");
 
     // link_t cam1 = ufr_subscriber("@new zmq:topic @coder msgpack @port 5001 @host 10.0.0.3");
     // link_t cam2 = ufr_subscriber("@new zmq:topic @coder msgpack @port 5002 @host 10.0.0.3");

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(app_pioneer)
 
+include_directories(./lib_pioneer/include)
+add_subdirectory(./lib_pioneer)
+
 # Example 1: simple
 add_executable(pioneer_base ./src/main.c)
 target_link_libraries(pioneer_base pioneer ufr)

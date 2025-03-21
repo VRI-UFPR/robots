@@ -38,8 +38,12 @@
 
 int main(int argc, char *argv[]) {
     link_t timer = ufr_subscriber("@new posix:timer @time 200ms @debug 0");
-    link_t vel_cmd = ufr_subscriber("@new ros_humble:topic @msg ros_humble:twist @topic /cmd_vel @debug 0");
-    link_t odom = ufr_publisher("@new ros_humble:topic @coder ros_humble:pose @topic /odom @debug 0");
+
+    link_t vel_cmd = ufr_subscriber("@new ros_humble:topic @coder ros_humble:twist @topic /cmd_vel @debug 0");
+    link_t vel_cmd2 = ufr_subscriber("@new mqtt @coder msgpack @host 10.0.0.4 @topic /cmd_vel @debug 0");
+
+    link_t odom = ufr_publisher("@new ros_humble @coder ros_humble:pose @debug 0 @topic /odom");
+    link_t odom2 = ufr_publisher("@new mqtt @coder msgpack @debug 0 @host 10.0.0.4 @topic /odom");
 
     pioneer_connect("/dev/pioneer", 0);
     pioneer_disable_sonars();
@@ -51,10 +55,22 @@ int main(int argc, char *argv[]) {
     float vel, rotvel, pos_th;
     int pos_x, pos_y;
     while( ufr_loop_ok() ) {
+
         if ( ufr_recv_async(&vel_cmd) == UFR_OK ) {
             ufr_get(&vel_cmd, "ff", &vel, &rotvel);
 
-            int16_t i16_vel = (int16_t) vel;
+            int16_t i16_vel = (int16_t) (vel * 100.0);
+            int16_t i16_rotvel = (int16_t) rotvel;
+            pioneer_vel( i16_vel );
+            pioneer_rotvel( i16_rotvel );
+            printf("[LOG]: %d %d\n", i16_vel, i16_rotvel);
+            count = 0;
+        }
+
+        if ( ufr_recv_async(&vel_cmd2) == UFR_OK ) {
+            ufr_get(&vel_cmd2, "ff", &vel, &rotvel);
+
+            int16_t i16_vel = (int16_t) (vel * 100.0);
             int16_t i16_rotvel = (int16_t) rotvel;
             pioneer_vel( i16_vel );
             pioneer_rotvel( i16_rotvel );
@@ -78,6 +94,7 @@ int main(int argc, char *argv[]) {
         pioneer_read(&pos_x, &pos_y, &pos_th);
         // printf("%d %d %f %f %f\n", pos_x, pos_y, pos_th, vel, rotvel);
         ufr_put(&odom, "iifff\n", pos_x, pos_y, pos_th*M_PI/180.0, vel, rotvel);
+        ufr_put(&odom2, "iifff\n", pos_x, pos_y, pos_th*M_PI/180.0, vel, rotvel);
 
         // wait 50ms
         usleep(50000);
