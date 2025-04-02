@@ -4,8 +4,10 @@
 #  Header
 # =============================================================================
 
+import math
 import rclpy
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TransformStamped
+from tf2_ros import TransformBroadcaster
 
 HALF_DISTANCE_BETWEEN_WHEELS = 0.045
 WHEEL_RADIUS = 0.025
@@ -33,6 +35,26 @@ class MyRobotDriver:
         self.__node = rclpy.create_node('my_robot_driver')
         self.__node.create_subscription(Twist, 'cmd_vel', self.__cmd_vel_callback, 1)
 
+        self.left_encoder = self.__robot.getDevice('left wheel sensor')
+        self.right_encoder = self.__robot.getDevice('right wheel sensor')
+        self.left_encoder.enable(100)
+        self.right_encoder.enable(100)
+
+        self.last_encoder_left = 0
+        self.last_encoder_right = 0
+
+        self.WHEEL_RADIUS = 0.033  # Raio da roda em metros
+        self.WHEEL_BASE = 0.16     # Distância entre as rodas em metros
+        self.ENCODER_RESOLUTION = 159.23  # Pulsos por revolução
+
+        self.last_time = self.__node.get_clock().now()
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
+
+        self.tf_broadcaster = TransformBroadcaster(self.__node)
+
+
     def __cmd_vel_callback(self, twist):
         self.__target_twist = twist
 
@@ -44,9 +66,92 @@ class MyRobotDriver:
 
         command_motor_left = (forward_speed - angular_speed * HALF_DISTANCE_BETWEEN_WHEELS) / WHEEL_RADIUS
         command_motor_right = (forward_speed + angular_speed * HALF_DISTANCE_BETWEEN_WHEELS) / WHEEL_RADIUS
-
         self.__left_motor.setVelocity(command_motor_left)
         self.__right_motor.setVelocity(command_motor_right)
+        self.update_odometry()
+
+    def update_odometry(self):
+        """Calcula e publica a odometria com base nos encoders das rodas"""
+        # Lê os valores atuais dos encoders
+        encoder_left = self.left_encoder.getValue()
+        encoder_right = self.right_encoder.getValue()
+        
+        # Calcula a diferença desde a última leitura
+        delta_left = encoder_left - self.last_encoder_left
+        delta_right = encoder_right - self.last_encoder_right
+        
+        # Atualiza os valores anteriores
+        self.last_encoder_left = encoder_left
+        self.last_encoder_right = encoder_right
+        
+        # Converte pulsos do encoder para distância percorrida (em metros)
+        # distance_left = (2 * math.pi * self.WHEEL_RADIUS * delta_left) / self.ENCODER_RESOLUTION
+        # distance_right = (2 * math.pi * self.WHEEL_RADIUS * delta_right) / self.ENCODER_RESOLUTION
+        
+        distance_left = delta_left
+        distance_right = delta_right
+
+        # print(distance_left, distance_right)
+
+        # Calcula o deslocamento linear e angular
+        linear = (distance_right + distance_left) / 2.0
+        angular = (distance_right - distance_left) / self.WHEEL_BASE
+        
+        # Tempo decorrido desde a última atualização
+        current_time = self.__node.get_clock().now()
+        dt = (current_time - self.last_time).nanoseconds / 1e9
+        self.last_time = current_time
+        
+        print(self.theta, linear, angular, math.sin(self.theta) )
+        # Atualiza a posição e orientação
+        # if self.theta == 0.0:
+        #    radius = linear / angular
+        #    self.x += radius * (math.sin(self.theta))
+        #    self.y -= radius * (math.cos(self.theta))
+        #    # self.theta += angular
+        # else:
+        self.x += linear * math.cos(self.theta)
+        self.y += linear * math.sin(self.theta)
+        
+        # Normaliza o ângulo entre -pi e pi
+        # self.theta = math.atan2(math.sin(self.theta), math.cos(self.theta))
+        
+        # Cria e publica a mensagem de odometria
+        # odom_msg = Odometry()
+        # odom_msg.header.stamp = current_time.to_msg()
+        # odom_msg.header.frame_id = 'odom'
+        # odom_msg.child_frame_id = 'base_link'
+        
+        # Posição
+        # odom_msg.pose.pose.position.x = self.x
+        # odom_msg.pose.pose.position.y = self.y
+        # odom_msg.pose.pose.position.z = 0.0
+        
+        # Orientação (convertida para quaternion)
+        # odom_msg.pose.pose.orientation.x = 0.0
+        # odom_msg.pose.pose.orientation.y = 0.0
+        # odom_msg.pose.pose.orientation.z = math.sin(self.theta / 2.0)
+        # odom_msg.pose.pose.orientation.w = math.cos(self.theta / 2.0)
+        
+        # Velocidade
+        # odom_msg.twist.twist.linear.x = linear / dt if dt > 0 else 0.0
+        # odom_msg.twist.twist.angular.z = angular / dt if dt > 0 else 0.0
+        # self.odom_publisher.publish(odom_msg)
+        
+        # Publica a transformada TF
+        t = TransformStamped()
+        t.header.stamp = current_time.to_msg()
+        t.header.frame_id = 'odom'
+        t.child_frame_id = 'base_link'
+        t.transform.translation.x = self.x
+        t.transform.translation.y = self.y
+        t.transform.translation.z = 0.0
+        t.transform.rotation.x = 0.0
+        t.transform.rotation.y = 0.0
+        t.transform.rotation.z = math.sin(self.theta / 2.0)
+        t.transform.rotation.w = math.cos(self.theta / 2.0)
+        
+        self.tf_broadcaster.sendTransform(t)
 
 # =============================================================================
 #  Documentation

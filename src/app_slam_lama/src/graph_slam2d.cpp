@@ -9,6 +9,15 @@
 
 using namespace lama;
 
+#ifndef ROBOT_TOPIC_SCAN
+#define ROBOT_TOPIC_SCAN "@new ros_humble @coder ros_humble:laser_scan @topic scan @frame_id laser_frame"
+#endif
+
+#ifndef ROBOT_TOPIC_ODOM
+#define ROBOT_TOPIC_ODOM "@new ros_noetic @coder ros_noetic:pose2d @topic /odom"
+#endif
+
+
 Pose3D getSensorPose(std::string frame_id) {
     return Pose3D();
 }
@@ -30,13 +39,12 @@ typedef struct {
 } Laser;
 
 int main() {
-    // link_t odom_sub = ufr_subscriber("@new ros_noetic @coder ros_noetic:twist")
-    link_t laser_sub = ufr_subscriber("@new ros_noetic @coder ros_noetic:laserscan @topic /scan");
+    link_t laser_sub = ufr_subscriber(ROBOT_TOPIC_SCAN);
+    link_t odom_sub = ufr_subscriber(ROBOT_TOPIC_ODOM);
 
     //
     GraphSlam2D::Options options;
     GraphSlam2D* slam2d_ = new GraphSlam2D(options);
-
 
     //
     double tmp = 0.0;
@@ -48,6 +56,7 @@ int main() {
     const float max_range_ = 12.0;
     const int beam_step_ = 1;
 
+    float odom_x, odom_y, odom_th;
     float scan_angle_min;
     float scan_angle_max;
     float scan_angle_inc;
@@ -63,28 +72,22 @@ int main() {
 
     // Main Loop
     while ( ufr_loop_ok() ) {
-        // Get Laser Pose
-        // Pose3D sensor_origin = getSensorPose("laser");
-
         if ( ufr_recv_async(&laser_sub) == UFR_OK ) {
             ufr_get(&laser_sub, "ff", &scan_angle_min, &scan_angle_max);
             ufr_get(&laser_sub, "ff", &scan_angle_inc, &scan_time_inc);
             ufr_get(&laser_sub, "f", &scan_time);
             ufr_get(&laser_sub, "ff", &scan_range_min, &scan_range_max);
             scan_ranges_size = ufr_get_af32(&laser_sub, scan_ranges, 4096);
-            printf("%f %f %d\n", scan_angle_min, scan_angle_max, scan_ranges_size);
+        }
+
+        if ( ufr_recv_async(&odom_sub) == UFR_OK ) {
+            ufr_get(&odom_sub, "fff", &odom_x, &odom_y, &odom_th);
         }
 
         continue;
 
-        // Get Odometry
-        Pose2D odom;
-        auto has_odom = getOdometry(odom);
-        if (not has_odom) {
-            break;
-        }
-
         // Check if the updated is needed
+        Pose2D odom(odom_x, odom_y, odom_th);
         const bool update = slam2d_->enoughMotion(odom);
         if ( !update ) {
             continue;

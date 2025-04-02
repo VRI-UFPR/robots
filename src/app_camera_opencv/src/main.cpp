@@ -40,29 +40,28 @@
 using namespace std;
 using namespace cv;
 
+#ifndef ROBOT_TOPIC_CAMERA_RGB
+#define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @topic camera_rgb"
+#endif
+
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    // link_t video = ufr_subscriber("@new mqtt @coder msgpack @host 185.159.82.136 @topic camera");
-    // link_t video = ufr_subscriber("@new mqtt @coder msgpack @host 10.0.0.4 @topic camera_rgb");
-    link_t video = ufr_subscriber("@new ros_noetic @coder ros_noetic:image @topic camera_rgb");
+    link_t video = ufr_publisher(ROBOT_TOPIC_CAMERA_RGB);
     ufr_exit_if_error(&video);
 
+    cv::VideoCapture cap(0);
     std::vector<uint8_t> buffer;
     while( ufr_loop_ok() ) {
-        char format[512];
-        int cols, rows;
-        
-        ufr_get(&video, "^sii", format, &cols, &rows);
-        const int nbytes = ufr_get_nbytes(&video);
+        Mat frame;
+        cap.read(frame);
+        imencode(".jpg", frame, buffer);
 
-        buffer.resize(nbytes);
-        ufr_get_raw(&video, &buffer[0], nbytes);
-        Mat frame = imdecode(buffer, cv::IMREAD_COLOR);
-        imshow("teste", frame);
-        waitKey(1);
+        ufr_put(&video, "sii", ".jpg", frame.cols, frame.rows);
+        ufr_put_raw(&video, &buffer[0], buffer.size());
+        ufr_send(&video);
     }
 
     // fim
