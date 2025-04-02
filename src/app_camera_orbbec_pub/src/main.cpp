@@ -30,7 +30,7 @@
 // ============================================================================
 
 #include <stdio.h>
-#include <OpenNI.h>
+#include <openni/OpenNI.h>
 #include <opencv2/opencv.hpp>
 #include <ufr.h>
 #include <vector>
@@ -42,8 +42,11 @@ using namespace openni;
 
 
 int main(int argc, char* argv[]) {
+    link_t video1 = ufr_publisher("@new mqtt @coder msgpack @host 10.0.0.6 @topic camera1");
+    ufr_exit_if_error(&video1);
 
-    link_t video = ufr_publisher("@new mqtt @coder msgpack @host 10.0.0.4 @topic camera1");
+    link_t video2 = ufr_publisher("@new mqtt @coder msgpack @host 10.0.0.6 @topic camera2");
+    ufr_exit_if_error(&video2);
 
     Status rc = OpenNI::initialize();
     if (rc != STATUS_OK)
@@ -65,26 +68,49 @@ int main(int argc, char* argv[]) {
 		return 2;
 	}
 
-	VideoStream depth;
+    // Abre a camera de profundidade
+    VideoStream depth;
+    if (device.getSensorInfo(SENSOR_DEPTH) != NULL)
+    {
+        rc = depth.create(device, SENSOR_DEPTH);
+        if (rc != STATUS_OK)
+        {
+            printf("Couldn't create depth stream\n%s\n", OpenNI::getExtendedError());
+            return 3;
+        }
+    }
 
-	if (device.getSensorInfo(SENSOR_DEPTH) != NULL)
-	{
-		rc = depth.create(device, SENSOR_DEPTH);
-		if (rc != STATUS_OK)
-		{
-			printf("Couldn't create depth stream\n%s\n", OpenNI::getExtendedError());
-			return 3;
-		}
-	}
+    rc = depth.start();
+    if (rc != STATUS_OK)
+    {
+        printf("Couldn't start the depth stream\n%s\n", OpenNI::getExtendedError());
+        return 4;
+    }
 
-	rc = depth.start();
-	if (rc != STATUS_OK)
-	{
-		printf("Couldn't start the depth stream\n%s\n", OpenNI::getExtendedError());
-		return 4;
-	}
+    // Abre a camera RGB
+    VideoStream rgb;
+    if (device.getSensorInfo(SENSOR_COLOR) != NULL)
+    {
+        rc = rgb.create(device, SENSOR_COLOR);
+        if (rc != STATUS_OK)
+        {
+            printf("Couldn't create rgb stream\n%s\n", OpenNI::getExtendedError());
+            return 3;
+        }
+    }
 
-	VideoFrameRef frame;
+    rc = rgb.start();
+    if (rc != STATUS_OK)
+    {
+        printf("Couldn't start the rgb stream\n%s\n", OpenNI::getExtendedError());
+        return 4;
+    }
+
+    device.setDepthColorSyncEnabled(true);
+    device.setImageRegistrationMode(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR);
+
+    std::vector<uint8_t> buffer;
+	VideoFrameRef frame, frame_rgb;
 
 	while (1) {
 		int changedStreamDummy;
@@ -96,38 +122,56 @@ int main(int argc, char* argv[]) {
 			continue;
 		}
 
-		rc = depth.readFrame(&frame);
-		if (rc != STATUS_OK)
-		{
-			printf("Read failed!\n%s\n", OpenNI::getExtendedError());
-			continue;
-		}
+        // le a imagem de profundidade
+        rc = depth.readFrame(&frame);
+        if (rc != STATUS_OK) {
+            printf("Read failed!\n%s\n", OpenNI::getExtendedError());
+            continue;
+        }
+        if (frame.getVideoMode().getPixelFormat() != PIXEL_FORMAT_DEPTH_1_MM && frame.getVideoMode().getPixelFormat() != PIXEL_FORMAT_DEPTH_100_UM)
+        {
+            printf("Unexpected frame format\n");
+            continue;
+        }
 
-		if (frame.getVideoMode().getPixelFormat() != PIXEL_FORMAT_DEPTH_1_MM && frame.getVideoMode().getPixelFormat() != PIXEL_FORMAT_DEPTH_100_UM)
-		{
-			printf("Unexpected frame format\n");
-			continue;
-		}
+        rc = rgb.readFrame(&frame_rgb);
+        if (rc != STATUS_OK) {
+            printf("Read failed!\n%s\n", OpenNI::getExtendedError());
+            continue;
+        }
 
-		DepthPixel* pDepth = (DepthPixel*)frame.getData();
 
-		int middleIndex = (frame.getHeight()+1)*frame.getWidth()/2;
 
-		printf("[%08llu] %8d\n", (long long)frame.getTimestamp(), pDepth[middleIndex]);
+        // int middleIndex = (frame.getHeight()+1)*frame.getWidth()/2;
+        // printf("[%08llu] %8d\n", (long long)frame.getTimestamp(), pDepth[middleIndex]);
 
+        // envia a imagem de profundidade
+        DepthPixel* pDepth = (DepthPixel*)frame.getData();
         cv::Mat mat_depth(480,640,CV_16U,(void*)pDepth);
-        std::vector<uint8_t> buffer;
         imencode(".png", mat_depth, buffer);
-        ufr_put(&video, "sii", ".tiff", 640, 480);
-        ufr_put_raw(&video, &buffer[0], buffer.size());
-	}
+        ufr_put(&video1, "sii", ".png", 480, 640);
+        ufr_put_raw(&video1, &buffer[0], buffer.size());
+        ufr_send(&video1);
 
-	depth.stop();
-	depth.destroy();
-	device.close();
-	OpenNI::shutdown();
+        // envia a imagem de profundidade
+        const void* pRgb = (void*)frame_rgb.getData();
+        cv::Mat mat_rgb(480,640,CV_8UC3,(void*)pRgb);
+        cv::Mat mat_bgr;
+        cv::cvtColor(mat_rgb, mat_bgr, cv::COLOR_RGB2BGR);
+        imencode(".png", mat_bgr, buffer);
+        ufr_put(&video2, "sii", ".png", 480, 640);
+        ufr_put_raw(&video2, &buffer[0], buffer.size());
+        ufr_send(&video2);
+    }
 
-	return 0;
+    rgb.stop();
+    rgb.destroy();
+    depth.stop();
+    depth.destroy();
+    device.close();
+    OpenNI::shutdown();
+
+    return 0;
 }
 
 
