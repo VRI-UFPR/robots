@@ -46,7 +46,8 @@ using namespace cv;
 
 int main() {
     // link_t video = ufr_subscriber("@new mqtt @coder msgpack @host 185.159.82.136 @topic camera");
-    link_t video = ufr_subscriber("@new mqtt @coder msgpack @host 10.0.0.4 @topic camera1");
+    // link_t video = ufr_subscriber("@new mqtt @coder msgpack @host 10.0.0.4 @topic camera_rgb");
+    link_t video = ufr_subscriber("@new ros_noetic @coder ros_noetic:image @topic camera_rgb");
     ufr_exit_if_error(&video);
 
     std::vector<uint8_t> buffer;
