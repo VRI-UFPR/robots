@@ -9,6 +9,15 @@
 
 using namespace lama;
 
+#ifndef ROBOT_TOPIC_SCAN
+#define ROBOT_TOPIC_SCAN "@new ros_humble @coder ros_humble:laser_scan @topic scan @frame_id laser_frame"
+#endif
+
+#ifndef ROBOT_TOPIC_ODOM
+#define ROBOT_TOPIC_ODOM "@new ros_noetic @coder ros_noetic:pose2d @topic /odom"
+#endif
+
+
 Pose3D getSensorPose(std::string frame_id) {
     return Pose3D();
 }
@@ -30,9 +39,8 @@ typedef struct {
 } Laser;
 
 int main() {
-    // link_t odom_sub = ufr_subscriber("@new ros_noetic @coder ros_noetic:twist")
-    link_t laser_sub = ufr_subscriber("@new ros_noetic @coder ros_noetic:laserscan @topic /scan");
-    link_t odom_sub = ufr_subscriber("@new ros_noetic @coder ros_noetic:pose2d @topic /odom");
+    link_t laser_sub = ufr_subscriber(ROBOT_TOPIC_SCAN);
+    link_t odom_sub = ufr_subscriber(ROBOT_TOPIC_ODOM);
 
     //
     GraphSlam2D::Options options;

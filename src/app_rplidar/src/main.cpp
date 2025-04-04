@@ -54,6 +54,10 @@ double max_distance = 8.0f;
 
 link_t g_pub;
 
+#ifndef ROBOT_TOPIC_SCAN
+#define ROBOT_TOPIC_SCAN "@new ros_humble @coder ros_humble:laser_scan @topic scan @frame_id laser_frame"
+#endif
+
 // ============================================================================
 //  Functions
 // ============================================================================
@@ -309,11 +313,7 @@ int main(int argc, char** argv) {
     const char* serial_port = (argc >= 2) ? argv[1] : "/dev/ttyUSB0";
     printf("Iniciando Rplidar on %s with baudrate %d\n", serial_port, serial_baudrate);
 
-    // g_pub = ufr_publisher("@new zmq @coder msgpack");
-    g_pub = ufr_publisher("@new ros_humble @coder ros_humble:laser_scan @topic %s @frame_id %s", 
-         topic_name, frame_id);
-
-    g_pub = ufr_publisher("@new ros_humble @coder ros_humble:laser_scan @topic scan @frame_id laser_frame");
+    g_pub = ufr_publisher(ROBOT_TOPIC_SCAN);
     ufr_exit_if_error(&g_pub);
 
     /* initialize SDK */

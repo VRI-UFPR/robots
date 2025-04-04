@@ -30,8 +30,8 @@
 // ============================================================================
 
 #include <stdio.h>
-#include <openni/OpenNI.h>
 #include <opencv2/opencv.hpp>
+#include <OpenNI.h>
 #include <ufr.h>
 #include <vector>
 
@@ -39,11 +39,11 @@ using namespace openni;
 
 #define SAMPLE_READ_WAIT_TIMEOUT 2000 //2000ms
 
-ifndef ROBOT_TOPIC_CAMERA_DEPTH
+#ifndef ROBOT_TOPIC_CAMERA_DEPTH
 #define ROBOT_TOPIC_CAMERA_DEPTH "@new mqtt @coder msgpack @host 10.0.0.6 @topic camera1"
 #endif
 
-ifndef ROBOT_TOPIC_CAMERA_RGB
+#ifndef ROBOT_TOPIC_CAMERA_RGB
 #define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @host 10.0.0.6 @topic camera2"
 #endif
 

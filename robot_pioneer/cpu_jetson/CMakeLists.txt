@@ -3,5 +3,5 @@ project(pioneer-jetson)
 
 include(../topicos.cmake)
 
-# add_subdirectory(src/app_camera_orbbec_pub)
+add_subdirectory(src/app_camera_orbbec_pub)
 # add_subdirectory(src/app_tts_piper)

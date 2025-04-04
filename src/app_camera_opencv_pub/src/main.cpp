@@ -40,12 +40,16 @@
 using namespace std;
 using namespace cv;
 
+#ifndef ROBOT_TOPIC_CAMERA_RGB
+#define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @host 185.159.82.136 @topic camera"
+#endif
+
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    link_t video = ufr_publisher("@new mqtt @coder msgpack @host 185.159.82.136 @topic camera");
+    link_t video = ufr_publisher(ROBOT_TOPIC_CAMERA_RGB);
     ufr_exit_if_error(&video);
 
     cv::VideoCapture cap(0);
