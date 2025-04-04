@@ -35,17 +35,27 @@
 #include <ufr.h>
 #include <vector>
 
+using namespace openni;
 
 #define SAMPLE_READ_WAIT_TIMEOUT 2000 //2000ms
 
-using namespace openni;
+ifndef ROBOT_TOPIC_CAMERA_DEPTH
+#define ROBOT_TOPIC_CAMERA_DEPTH "@new mqtt @coder msgpack @host 10.0.0.6 @topic camera1"
+#endif
 
+ifndef ROBOT_TOPIC_CAMERA_RGB
+#define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @host 10.0.0.6 @topic camera2"
+#endif
+
+// ============================================================================
+//  Main
+// ============================================================================
 
 int main(int argc, char* argv[]) {
-    link_t video1 = ufr_publisher("@new mqtt @coder msgpack @host 10.0.0.6 @topic camera1");
+    link_t video1 = ufr_publisher(ROBOT_TOPIC_CAMERA_DEPTH);
     ufr_exit_if_error(&video1);
 
-    link_t video2 = ufr_publisher("@new mqtt @coder msgpack @host 10.0.0.6 @topic camera2");
+    link_t video2 = ufr_publisher(ROBOT_TOPIC_CAMERA_RGB);
     ufr_exit_if_error(&video2);
 
     Status rc = OpenNI::initialize();

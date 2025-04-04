@@ -32,14 +32,21 @@
 
 #include "pioneer_p3dx.h"
 
+#ifndef ROBOT_TOPIC_CMD_VEL
+#define ROBOT_TOPIC_CMD_VEL "@new ros_humble:topic @coder ros_humble:twist @topic /cmd_vel @debug 0"
+#endif
+
 // ============================================================================
 //  Main Pioneer
 // ============================================================================
 
 int main(int argc, char *argv[]) {
+    printf("%s\n", ROBOT_TOPIC_CMD_VEL);
+    return 0;
+
     link_t timer = ufr_subscriber("@new posix:timer @time 200ms @debug 0");
 
-    link_t vel_cmd = ufr_subscriber("@new ros_humble:topic @coder ros_humble:twist @topic /cmd_vel @debug 0");
+    link_t vel_cmd = ufr_subscriber(ROBOT_TOPIC_CMD_VEL);
     link_t vel_cmd2 = ufr_subscriber("@new mqtt @coder msgpack @host 10.0.0.4 @topic /cmd_vel @debug 0");
 
     link_t odom = ufr_publisher("@new ros_humble @coder ros_humble:pose @debug 0 @topic /odom");
