@@ -68,8 +68,8 @@ def determine_position(landmarks):
 # =============================================================================
 
 # Captura de vídeo da webcam
-# sub = ufr.Subscriber("@new video @id 0")
-sub = ufr.Subscriber("@new video @@new mqtt @@coder msgpack @@host 10.0.0.6 @@topic camera_rgb")
+sub = ufr.Subscriber("@new video @id 0")
+# sub = ufr.Subscriber("@new video @@new mqtt @@coder msgpack @@host 10.0.0.6 @@topic camera_rgb")
 
 # Loop principal
 while True:

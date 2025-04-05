@@ -87,6 +87,7 @@ target_link_libraries(piper
   espeak-ng
   piper_phonemize
   onnxruntime
+  ufr
   ${PIPER_EXTRA_LIBRARIES}
 )
 

@@ -11,6 +11,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <ufr.h>
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
@@ -226,9 +227,16 @@ int main(int argc, char *argv[]) {
     spdlog::info("Output directory: {}", runConfig.outputPath.value().string());
   }
 
+  link_t topic = ufr_subscriber("@new mqtt @coder msgpack @host 127.0.0.1 @topic tts");
+
+
   string line;
   piper::SynthesisResult result;
-  while (getline(cin, line)) {
+  while ( ufr_loop_ok() ) {
+    char buffer[1024];
+    ufr_get(&topic, "^s", buffer);
+    line = buffer;
+
     auto outputType = runConfig.outputType;
     auto speakerId = voice.synthesisConfig.speakerId;
     std::optional<filesystem::path> maybeOutputPath = runConfig.outputPath;
