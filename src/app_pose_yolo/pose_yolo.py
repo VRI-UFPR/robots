@@ -63,7 +63,7 @@ while True:
         xy_np = xy.cpu().numpy() if hasattr(xy, 'cpu') else np.array(xy)
         for lin in xy_np[0]:
             pub.put("ff", lin[0], lin[1])
-            # print("aaaa", lin[0], lin[1])
+            print("aaaa", lin[0], lin[1])
     pub.put("\n")
 
 sub.close()
