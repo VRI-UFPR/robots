@@ -41,7 +41,7 @@ using namespace std;
 using namespace cv;
 
 #ifndef ROBOT_TOPIC_CAMERA_RGB
-#define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @host 185.159.82.136 @topic camera"
+#define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @topic camera_rgb"
 #endif
 
 // ============================================================================
