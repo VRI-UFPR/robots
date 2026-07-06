@@ -39,8 +39,8 @@ using namespace std;
 using namespace cv;
 
 #ifndef ROBOT_TOPIC_SCAN
-// #define ROBOT_TOPIC_SCAN "@new mqtt @coder msgpack @host 177.153.62.174 @topic /pioneer/scan"
-#define ROBOT_TOPIC_SCAN "@new webots @topic /scan"
+#define ROBOT_TOPIC_SCAN "@new mqtt @coder msgpack @host 177.153.62.174 @topic /pioneer/scan"
+// #define ROBOT_TOPIC_SCAN "@new webots @topic /scan"
 #endif
 
 #define ROWS  480
@@ -66,8 +66,10 @@ int main() {
 
         // Faz a leitura das distancias
         float valors[1024];
-        ufr_get(&scan, "%f %f %f %- %- %- %-", &angle_min, &angle_max, &angle_increment);
+        ufr_get(&scan, "%f %f %f %- %- %- %- %-", &angle_min, &angle_max, &angle_increment);
         const int nitems = ufr_get_af32(&scan, valors, 1024);
+
+        printf("%d %f %f %f\n", nitems, angle_min, angle_max, angle_increment);
 
         // 
         image.setTo(Scalar(0));
@@ -80,6 +82,7 @@ int main() {
             }
 
             // Calcula a posição do pixel
+            // printf("%f\n", distance);
             const int32_t dx = round(5.0 * distance * cos(angle));
             const int32_t dy = round(5.0 * distance * -sin(angle));
             const uint32_t py = cy + dy;

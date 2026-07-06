@@ -41,8 +41,7 @@ using namespace std;
 using namespace cv;
 
 #ifndef ROBOT_TOPIC_CAMERA_RGB
-#error "opa"
-#define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @topic camera_rgb"
+#define ROBOT_TOPIC_CAMERA_RGB "@new mqtt @coder msgpack @topic camera_rgb @host 177.153.62.174"
 #endif
 
 // ============================================================================

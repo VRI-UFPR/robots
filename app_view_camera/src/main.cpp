@@ -37,7 +37,7 @@ using namespace std;
 using namespace cv;
 
 
-const char* args_frame = "@new video @cols 640 @rows 480 @@new mqtt @@coder msgpack @@topic /camera_rgb @@host 177.153.62.174";
+const char* args_frame = "@new video @cols 640 @rows 480 @@new mqtt @@coder msgpack @@topic /pioneer/camera_rgb @@host 177.153.62.174";
 
 // ============================================================================
 //  Test

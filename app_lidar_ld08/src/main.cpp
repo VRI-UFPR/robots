@@ -30,11 +30,10 @@ int main(int argc, char ** argv)
   //fgb auto node = rclcpp::Node::make_shared("laser_scan_publisher");
   //fgb rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr lidar_pub;
 
-  LiPkg * pkg;
   std::string product;
   int32_t ver = 8;
-  pkg = new LD08_LiPkg;
 
+  LiPkg* pkg = new LD08_LiPkg();
   CmdInterfaceLinux cmd_port(ver);
   std::vector<std::pair<std::string, std::string>> device_list;
   std::string port_name;
@@ -47,9 +46,11 @@ int main(int argc, char ** argv)
   }
 
   if (port_name.empty() == false) {
+    printf("opa1\n");
     std::cout << "FOUND LDS-02" << product << std::endl;
     cmd_port.SetReadCallback(
       [&pkg](const char * byte, size_t len) {
+        printf("opa2\n");
         if (pkg->Parse((const uint8_t *)(byte), len)) {
           pkg->AssemblePacket();
         }
@@ -66,14 +67,14 @@ int main(int argc, char ** argv)
     //fgb   "scan", rclcpp::QoS(rclcpp::SensorDataQoS())
     //fgb );
 
-    link_t pub = ufr_publisher("@new ros_humble @coder ros_humble:laser_scan @topic /scan");
+    // link_t pub = ufr_publisher("@new ros_humble @coder ros_humble:laser_scan @topic /scan");
+    link_t pub = ufr_publisher("@new mqtt @coder msgpack @topic /pioneer/scan @host vriufpr.ddns.net");
 
     while ( ufr_loop_ok() ) {
       if (pkg->IsFrameReady()) {
-        // pkg->setStamp(node->now());
-        // lidar_pub->publish(pkg->GetLaserScan());
-        printf("opa\n");
+        const LaserScan* laser = pkg->GetLaserScan();
         pkg->ResetFrameReady();
+        printf("opa\n");
       }
     }
   } else {

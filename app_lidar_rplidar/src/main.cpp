@@ -55,7 +55,8 @@ double max_distance = 8.0f;
 link_t g_pub;
 
 #ifndef ROBOT_TOPIC_SCAN
-#define ROBOT_TOPIC_SCAN "@new ros_humble @coder ros_humble:laser_scan @topic scan @frame_id laser_frame"
+// #define ROBOT_TOPIC_SCAN "@new ros_humble @coder ros_humble:laser_scan @topic scan @frame_id laser_frame"
+#define ROBOT_TOPIC_SCAN "@new mqtt @coder msgpack @topic /pioneer/scan @host 177.153.62.174"
 #endif
 
 // ============================================================================
@@ -223,7 +224,7 @@ void publish_scan(const double scan_time, ResponseNodeArray nodes, size_t node_c
 
     // printf("%d %f %f %f\n", scan_count, scan_time, range_min, range_max);
     // m_publisher->publish(scan_msg);
-    ufr_put(&g_pub, "fffffff", msg_angle_min, msg_angle_max, angle_increment, time_increment, scan_time, range_min, range_max);
+    ufr_put(&g_pub, "%f %f %f %f %f %f %f", msg_angle_min, msg_angle_max, angle_increment, time_increment, scan_time, range_min, range_max);
     ufr_put_af32(&g_pub, ranges, node_count);
     ufr_put_af32(&g_pub, intensities, node_count);
     ufr_send(&g_pub);
